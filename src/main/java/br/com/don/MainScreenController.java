@@ -32,14 +32,17 @@ import javafx.stage.DirectoryChooser;
 
 public class MainScreenController implements Initializable {
 
-    private static String printFolder; // Pasta a ser monitorada
+    private static String printFolder;
     private WatchService watchService;
     private Thread monitorThread;
-    
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         ObservableList<String> printerNames = FXCollections.observableArrayList(getAvailablePrinters());
         printerChoiceBox.setItems(printerNames);
+        printerChoiceBox.setValue(printerNames.get(0));
+        folderPathField.setText(getDownloadFolderPath());
+        printFolder = getDownloadFolderPath();
     }
     
     @FXML
@@ -61,7 +64,7 @@ public class MainScreenController implements Initializable {
     private Circle statusIndicator;
 
     @FXML
-    void changeMonitoringState(ActionEvent event) {
+    public void changeMonitoringState(ActionEvent event) {
         // Define o evento de clique do botão "Iniciar Monitoramento"
         if (monitorThread != null && monitorThread.isAlive()) {
             // Se o monitoramento estiver em andamento, para o monitoramento
@@ -162,12 +165,15 @@ public class MainScreenController implements Initializable {
 
         // Inicia o thread de monitoramento
         monitorThread.start();
-
-        // Altera o texto do botão para "Parar Monitoramento"
+        
+        chooseFolderButton.setDisable(true);
+        folderPathField.setDisable(true);
+        
         startButton.setText("Parar Monitoramento");
-
-        // Altera a cor do indicador de status para verde
         statusIndicator.setFill(Color.GREEN);
+
+        App.trayIcon.setGraphic(App.class.getResource("/icons/on.png"));
+        App.trayIcon.showInfoMessage("Monitoring service started...");
     }
 
     // Para o monitoramento
@@ -184,13 +190,22 @@ public class MainScreenController implements Initializable {
             monitorThread.interrupt();
         }
 
-        // Altera o texto do botão de volta para "Iniciar Monitoramento"
-        startButton.setText("Iniciar Monitoramento");
+        chooseFolderButton.setDisable(false);
+        folderPathField.setDisable(false);
 
-        // Altera a cor do indicador de status para vermelho
+        startButton.setText("Iniciar Monitoramento");
         statusIndicator.setFill(Color.RED);
+
+        App.trayIcon.setGraphic(App.class.getResource("/icons/off.png"));
+        App.trayIcon.showInfoMessage("Monitoring service stopped...");
     }
 
+    public static String getDownloadFolderPath() {
+        String userHome = System.getProperty("user.home");
+        String downloadFolder = userHome + "\\Downloads";
+        return downloadFolder;
+    }
+    
     // Método para imprimir os dados
     private void printData(String name, String value, String date, String selectedPrinter) {
         // TODO
