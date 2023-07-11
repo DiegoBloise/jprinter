@@ -194,5 +194,7 @@ public class MainScreenController implements Initializable {
     // Método para imprimir os dados
     private void printData(String name, String value, String date, String selectedPrinter) {
         // TODO
+
+        //teste
     }
 }
