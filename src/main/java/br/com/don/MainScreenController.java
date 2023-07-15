@@ -76,6 +76,7 @@ public class MainScreenController implements Initializable {
                     startMonitoring(printerChoiceBox.getValue());
                 } catch (IOException e) {
                     e.printStackTrace();
+                    App.trayIcon.showErrorMessage("Erro ao iniciar serviço.", e.getMessage());
                 }
             }
         }
@@ -148,6 +149,7 @@ public class MainScreenController implements Initializable {
 
                                 // Imprime os dados
                                 printData(name, value, date, selectedPrinter);
+                                App.trayIcon.showInfoMessage("Imprimindo...");
 
                                 // Apaga o arquivo depois de impresso (opcional)
                                 Files.delete(filePath);
@@ -160,6 +162,7 @@ public class MainScreenController implements Initializable {
                 }
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
+                App.trayIcon.showErrorMessage("Erro ao monitorar pasta", e.getMessage());
             }
         });
 
@@ -173,7 +176,7 @@ public class MainScreenController implements Initializable {
         statusIndicator.setFill(Color.GREEN);
 
         App.trayIcon.setGraphic(App.class.getResource("/icons/on.png"));
-        App.trayIcon.showInfoMessage("Monitoring service started...");
+        App.trayIcon.showInfoMessage("Serviço iniciado...");
     }
 
     // Para o monitoramento
@@ -183,6 +186,7 @@ public class MainScreenController implements Initializable {
                 watchService.close();
             } catch (IOException e) {
                 e.printStackTrace();
+                App.trayIcon.showErrorMessage("Erro ao encerrar serviço.", e.getMessage());
             }
         }
 
@@ -197,7 +201,7 @@ public class MainScreenController implements Initializable {
         statusIndicator.setFill(Color.RED);
 
         App.trayIcon.setGraphic(App.class.getResource("/icons/off.png"));
-        App.trayIcon.showInfoMessage("Monitoring service stopped...");
+        App.trayIcon.showInfoMessage("Serviço encerrado...");
     }
 
     public static String getDownloadFolderPath() {
@@ -208,8 +212,29 @@ public class MainScreenController implements Initializable {
     
     // Método para imprimir os dados
     private void printData(String name, String value, String date, String selectedPrinter) {
-        // TODO
+        /*
+        String texto="Algo a ser impresso, use caracteres de formatação relativos ao modelo da impressora";
 
-        //teste
+        PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
+        //lista todas as impressoras instaladas
+        for (int i = 0; i < services.length; i++) {
+            System.out.println(services[i].getName());
+        }
+        
+        try {
+            PrintService impressora = services[3]; //escolhi a 3. impressora listada
+
+            DocPrintJob dpj = impressora.createPrintJob();
+            InputStream stream = new ByteArrayInputStream(texto.getBytes());
+
+            DocFlavor flavor = DocFlavor.INPUT_STREAM.AUTOSENSE;
+            Doc doc = new SimpleDoc(stream, flavor, null);
+            dpj.print(doc, null);
+
+        } catch (PrintException e) {
+            e.printStackTrace();
+            App.trayIcon.showErrorMessage("Erro ao imprimir.", e.getMessage());
+        }
+         */
     }
 }
