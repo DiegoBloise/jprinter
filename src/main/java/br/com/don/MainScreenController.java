@@ -162,7 +162,8 @@ public class MainScreenController implements Initializable {
                 }
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
-                App.trayIcon.showErrorMessage("Erro ao monitorar pasta", e.getMessage());
+                App.trayIcon.showErrorMessage("Erro ao ler arquivo", e.getMessage());
+                stopMonitoring();
             }
         });
 
