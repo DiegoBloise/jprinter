@@ -28,14 +28,14 @@
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
         </dependency>
-    
+
         <dependency>
             <groupId>com.dustinredmond.fxtrayicon</groupId>
             <artifactId>FXTrayIcon</artifactId>
             <version>4.0.1</version>
         </dependency>
     </dependencies>
-    
+
     <build>
         
         <plugins>

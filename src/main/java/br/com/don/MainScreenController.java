@@ -15,6 +15,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import javax.print.Doc;
+import javax.print.DocFlavor;
+import javax.print.DocPrintJob;
+import javax.print.PrintException;
+import javax.print.PrintService;
+import javax.print.PrintServiceLookup;
+import javax.print.SimpleDoc;
+import javax.print.attribute.HashPrintRequestAttributeSet;
+import javax.print.attribute.PrintRequestAttributeSet;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -213,29 +223,42 @@ public class MainScreenController implements Initializable {
     
     // Método para imprimir os dados
     private void printData(String name, String value, String date, String selectedPrinter) {
-        /*
-        String texto="Algo a ser impresso, use caracteres de formatação relativos ao modelo da impressora";
-
-        PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
-        //lista todas as impressoras instaladas
-        for (int i = 0; i < services.length; i++) {
-            System.out.println(services[i].getName());
-        }
+        PrintService printService = null;
         
+        PrintService[] availablePrinters = PrintServiceLookup.lookupPrintServices(null, null);
+
+        for (PrintService printer : availablePrinters) {
+            if (printer.getName().equals(selectedPrinter)) {
+                printService = printer;
+            }
+        }
+
+        if (printService == null) {
+            System.out.println("Impressora não encontrada.");
+            App.trayIcon.showErrorMessage("Erro ao imprimir.", "Impressora não encontrada.");
+            return;
+        }
+
+        // Texto a ser impresso
+        String text = "Exemplo de texto para impressão";
+
+        // Criar o conjunto de atributos de impressão
+        PrintRequestAttributeSet attributes = new HashPrintRequestAttributeSet();
+        //attributes.add(new Copies(1));  // Definir o número de cópias
+
+        // Criar o documento a ser impresso
+        DocFlavor flavor = DocFlavor.BYTE_ARRAY.AUTOSENSE;
+        Doc document = new SimpleDoc(text.getBytes(), flavor, null);
+
+        // Criar a tarefa de impressão
+        DocPrintJob task = printService.createPrintJob();
+
         try {
-            PrintService impressora = services[3]; //escolhi a 3. impressora listada
-
-            DocPrintJob dpj = impressora.createPrintJob();
-            InputStream stream = new ByteArrayInputStream(texto.getBytes());
-
-            DocFlavor flavor = DocFlavor.INPUT_STREAM.AUTOSENSE;
-            Doc doc = new SimpleDoc(stream, flavor, null);
-            dpj.print(doc, null);
-
+            // Enviar o documento para impressão
+            task.print(document, attributes);
         } catch (PrintException e) {
             e.printStackTrace();
             App.trayIcon.showErrorMessage("Erro ao imprimir.", e.getMessage());
         }
-         */
     }
 }
