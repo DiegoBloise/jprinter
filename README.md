@@ -50,5 +50,3 @@ This project is licensed under the MIT License. See the [LICENSE](https://github
 - Thanks to the Java community for providing the necessary libraries and tools.
 
 ---
-
-Feel free to customize this README according to your project's specific details and requirements.
