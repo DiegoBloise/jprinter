@@ -1,4 +1,4 @@
-package br.com.don;
+package com.lunas.jprinter;
 
 import java.io.IOException;
 
@@ -18,6 +18,8 @@ public class App extends Application {
     public static FXTrayIcon trayIcon;
 
     private MainScreenController msc;
+
+
     @Override
     public void start(Stage primaryStage) throws IOException {
         primaryStage.setTitle("Don Printer");
@@ -26,29 +28,32 @@ public class App extends Application {
         scene = new Scene(loadFXML("MainScreen"));
 
         trayIcon = new FXTrayIcon(primaryStage, getClass().getResource("/icons/off.png"));
-        
+
         trayIcon.addExitItem("Fechar");
         MenuItem monitoringItem = new MenuItem("Iniciar monitoramento", null);
-        
+
         msc = new MainScreenController();
 
         monitoringItem.setOnAction(e -> msc.changeMonitoringState(e));
         trayIcon.addMenuItem(monitoringItem);
-        
+
         trayIcon.show();
 
         primaryStage.setScene(scene);
         primaryStage.show();
     }
 
-    static void setRoot(String fxml) throws IOException {
+
+    public static void setRoot(String fxml) throws IOException {
         scene.setRoot(loadFXML(fxml));
     }
+
 
     private static Parent loadFXML(String fxml) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
         return fxmlLoader.load();
     }
+
 
     public static void main(String[] args) {
         launch();

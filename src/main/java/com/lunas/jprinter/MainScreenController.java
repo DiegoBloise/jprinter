@@ -1,4 +1,4 @@
-package br.com.don;
+package com.lunas.jprinter;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,6 +46,7 @@ public class MainScreenController implements Initializable {
     private WatchService watchService;
     private Thread monitorThread;
 
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         ObservableList<String> printerNames = FXCollections.observableArrayList(getAvailablePrinters());
@@ -54,7 +55,8 @@ public class MainScreenController implements Initializable {
         folderPathField.setText(getDownloadFolderPath());
         printFolder = getDownloadFolderPath();
     }
-    
+
+
     @FXML
     private Button chooseFolderButton;
 
@@ -72,6 +74,7 @@ public class MainScreenController implements Initializable {
 
     @FXML
     private Circle statusIndicator;
+
 
     @FXML
     public void changeMonitoringState(ActionEvent event) {
@@ -105,6 +108,7 @@ public class MainScreenController implements Initializable {
         }
     }
 
+
     // Obtém a lista de impressoras disponíveis
     private List<String> getAvailablePrinters() {
         ObservableList<Printer> printers = FXCollections.observableArrayList();
@@ -123,6 +127,7 @@ public class MainScreenController implements Initializable {
 
         return printerNames;
     }
+
 
     // Inicia o monitoramento da pasta
     private void startMonitoring(String selectedPrinter) throws IOException {
@@ -179,16 +184,17 @@ public class MainScreenController implements Initializable {
 
         // Inicia o thread de monitoramento
         monitorThread.start();
-        
+
         chooseFolderButton.setDisable(true);
         folderPathField.setDisable(true);
-        
+
         startButton.setText("Parar Monitoramento");
         statusIndicator.setFill(Color.GREEN);
 
         App.trayIcon.setGraphic(App.class.getResource("/icons/on.png"));
         App.trayIcon.showInfoMessage("Serviço iniciado...");
     }
+
 
     // Para o monitoramento
     private void stopMonitoring() {
@@ -215,16 +221,18 @@ public class MainScreenController implements Initializable {
         App.trayIcon.showInfoMessage("Serviço encerrado...");
     }
 
+
     public static String getDownloadFolderPath() {
         String userHome = System.getProperty("user.home");
         String downloadFolder = userHome + "\\Downloads";
         return downloadFolder;
     }
-    
+
+
     // Método para imprimir os dados
     private void printData(String name, String value, String date, String selectedPrinter) {
         PrintService printService = null;
-        
+
         PrintService[] availablePrinters = PrintServiceLookup.lookupPrintServices(null, null);
 
         for (PrintService printer : availablePrinters) {
