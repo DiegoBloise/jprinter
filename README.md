@@ -43,7 +43,7 @@ JPrinter uses the following dependencies:
 Contributions to JPrinter are welcome! If you have any suggestions, improvements, or bug fixes, please feel free to open an issue or submit a pull request on the project's GitHub repository.
 
 ## License
-This project is licensed under the MIT License. See the [LICENSE](https://github.com/your-username/your-project/blob/main/LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](https://github.com/DiegoBloise/jprinter/blob/main/LICENSE) file for details.
 
 ## Acknowledgments
 - This project was inspired by the need for a simple file-to-print solution.
