@@ -22,7 +22,7 @@ public class App extends Application {
 
     @Override
     public void start(Stage primaryStage) throws IOException {
-        primaryStage.setTitle("Don Printer");
+        primaryStage.setTitle("Jprinter");
         primaryStage.setResizable(false);
 
         scene = new Scene(loadFXML("MainScreen"));

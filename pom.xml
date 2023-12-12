@@ -59,10 +59,10 @@
                         <!-- Usage: mvn clean javafx:run -->
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>br.com.don.App</mainClass>
+                            <mainClass>com.lunas.jprinter.App</mainClass>
                         </configuration>
                     </execution>
-                </executions>    
+                </executions>
             </plugin>
 
         </plugins>
