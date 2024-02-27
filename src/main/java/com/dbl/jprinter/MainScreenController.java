@@ -1,4 +1,4 @@
-package com.lunas.jprinter;
+package com.dbl.jprinter;
 
 import java.io.File;
 import java.io.IOException;
