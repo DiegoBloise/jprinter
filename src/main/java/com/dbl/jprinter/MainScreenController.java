@@ -296,7 +296,7 @@ public class MainScreenController implements Initializable {
                     .writeLF(bold, "Assinatura:")
                     .writeLF("-".repeat(48))
 
-                    .feed(8)
+                    .feed(7)
 
                     .cut(EscPos.CutMode.FULL);
 
