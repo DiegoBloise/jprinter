@@ -15,15 +15,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
-import javax.print.Doc;
-import javax.print.DocFlavor;
-import javax.print.DocPrintJob;
-import javax.print.PrintException;
 import javax.print.PrintService;
 import javax.print.PrintServiceLookup;
-import javax.print.SimpleDoc;
-import javax.print.attribute.HashPrintRequestAttributeSet;
-import javax.print.attribute.PrintRequestAttributeSet;
+
+import com.github.anastaciocintra.escpos.EscPos;
+import com.github.anastaciocintra.escpos.EscPosConst;
+import com.github.anastaciocintra.escpos.PrintModeStyle;
+import com.github.anastaciocintra.escpos.Style;
+import com.github.anastaciocintra.output.PrinterOutputStream;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -158,12 +157,12 @@ public class MainScreenController implements Initializable {
 
                                 // Aqui você pode extrair os dados do arquivo (nome, valor, data) e enviá-los para impressão
                                 // Exemplo de extração de dados simples
-                                String name = lines.get(0);
-                                String value = lines.get(1);
-                                String date = lines.get(2);
+                                String nome = lines.get(0);
+                                String valor = lines.get(1);
+                                String data = lines.get(2);
 
                                 // Imprime os dados
-                                printData(name, value, date, selectedPrinter);
+                                printData(nome, valor, data, selectedPrinter);
                                 App.trayIcon.showInfoMessage("Imprimindo...");
 
                                 // Apaga o arquivo depois de impresso (opcional)
@@ -187,6 +186,7 @@ public class MainScreenController implements Initializable {
 
         chooseFolderButton.setDisable(true);
         folderPathField.setDisable(true);
+        printerChoiceBox.setDisable(true);
 
         startButton.setText("Parar Monitoramento");
         statusIndicator.setFill(Color.GREEN);
@@ -213,6 +213,7 @@ public class MainScreenController implements Initializable {
 
         chooseFolderButton.setDisable(false);
         folderPathField.setDisable(false);
+        printerChoiceBox.setDisable(false);
 
         startButton.setText("Iniciar Monitoramento");
         statusIndicator.setFill(Color.RED);
@@ -230,7 +231,7 @@ public class MainScreenController implements Initializable {
 
 
     // Método para imprimir os dados
-    private void printData(String name, String value, String date, String selectedPrinter) {
+    private void printData(String nome, String valor, String data, String selectedPrinter) throws IOException {
         PrintService printService = null;
 
         PrintService[] availablePrinters = PrintServiceLookup.lookupPrintServices(null, null);
@@ -247,24 +248,61 @@ public class MainScreenController implements Initializable {
             return;
         }
 
-        // Texto a ser impresso
-        String text = "Exemplo de texto para impressão";
 
-        // Criar o conjunto de atributos de impressão
-        PrintRequestAttributeSet attributes = new HashPrintRequestAttributeSet();
-        //attributes.add(new Copies(1));  // Definir o número de cópias
-
-        // Criar o documento a ser impresso
-        DocFlavor flavor = DocFlavor.BYTE_ARRAY.AUTOSENSE;
-        Doc document = new SimpleDoc(text.getBytes(), flavor, null);
-
-        // Criar a tarefa de impressão
-        DocPrintJob task = printService.createPrintJob();
+        PrinterOutputStream printerOutputStream = new PrinterOutputStream(printService);
+        EscPos escpos = new EscPos(printerOutputStream);
 
         try {
-            // Enviar o documento para impressão
-            task.print(document, attributes);
-        } catch (PrintException e) {
+
+            PrintModeStyle normal = new PrintModeStyle();
+
+            Style title = new Style()
+                    .setFontSize(Style.FontSize._3, Style.FontSize._3)
+                    .setJustification(EscPosConst.Justification.Center);
+
+            Style subtitle = new Style(escpos.getStyle())
+                    .setBold(true)
+                    .setUnderline(Style.Underline.OneDotThick);
+
+            Style bold = new Style(escpos.getStyle())
+                    .setBold(true);
+
+            Style center = new Style()
+                    .setJustification(EscPosConst.Justification.Center);
+
+
+            escpos
+                    .writeLF(title,"Recibo de Vale")
+
+                    .feed(3)
+
+                    .write(center, "Data: ")
+                    .write(bold, data)
+
+                    .feed(3)
+
+                    .write(normal, "Colaborador:" + " ".repeat(36 - nome.length()))
+                    .writeLF(bold, nome)
+                    .writeLF("-".repeat(48))
+
+                    .feed(2)
+
+                    .write( "Valor:" + " ".repeat(39 - valor.length()))
+                    .writeLF(bold, "R$ " + valor)
+                    .writeLF("-".repeat(48))
+
+                    .feed(2)
+
+                    .writeLF(bold, "Assinatura:")
+                    .writeLF("-".repeat(48))
+
+                    .feed(8)
+
+                    .cut(EscPos.CutMode.FULL);
+
+            escpos.close();
+
+        } catch (IOException e) {
             e.printStackTrace();
             App.trayIcon.showErrorMessage("Erro ao imprimir.", e.getMessage());
         }
