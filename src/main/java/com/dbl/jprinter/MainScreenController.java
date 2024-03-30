@@ -41,8 +41,12 @@ import javafx.stage.DirectoryChooser;
 
 public class MainScreenController implements Initializable {
 
+    private String extensao = "djprt";
+
     private static String printFolder;
+
     private WatchService watchService;
+
     private Thread monitorThread;
 
 
@@ -151,7 +155,7 @@ public class MainScreenController implements Initializable {
                             Path filePath = folderPath.resolve((Path) event.context());
 
                             // Verifica se o arquivo é um arquivo de texto
-                            if (Files.isRegularFile(filePath) && filePath.toString().endsWith(".txt")) {
+                            if (Files.isRegularFile(filePath) && filePath.toString().endsWith(extensao)) {
                                 // Lê o conteúdo do arquivo
                                 List<String> lines = Files.readAllLines(filePath);
 
