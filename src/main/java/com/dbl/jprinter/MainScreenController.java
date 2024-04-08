@@ -14,7 +14,9 @@ import java.nio.file.WatchService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.concurrent.TimeUnit;
 
+import javax.naming.NameNotFoundException;
 import javax.print.PrintService;
 import javax.print.PrintServiceLookup;
 
@@ -39,18 +41,16 @@ import javafx.scene.control.TextField;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.Stage;
 
 public class MainScreenController implements Initializable {
 
-    private String extensao = "djprt";
-
+    private static final String DEFAULT_FILE_EXTENSION = "djprt";
     private static String printFolder;
-
     private WatchService watchService;
-
     private Thread monitorThread;
-
-    private Boolean doidera;
+    private boolean monitoring = false;
+    private boolean hasConfig = false;
 
     @FXML
     private Button chooseFolderButton;
@@ -76,8 +76,6 @@ public class MainScreenController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        doidera = false;
-
         folderPathField.setText(getDownloadFolderPath());
         printFolder = getDownloadFolderPath();
 
@@ -87,9 +85,10 @@ public class MainScreenController implements Initializable {
         String lastPrinter = AppConfig.loadLastPrinter();
         if (lastPrinter != null && printerNames.contains(lastPrinter)) {
             printerChoiceBox.setValue(lastPrinter);
-            doidera = true;
+            hasConfig = true;
         } else {
             printerChoiceBox.setValue(printerNames.get(0));
+            hasConfig = false;
         }
     }
 
@@ -97,59 +96,54 @@ public class MainScreenController implements Initializable {
     @FXML
     public void changeMonitoringState(ActionEvent event) {
         System.out.println("CHANGING STATE");
-        if (monitorThread != null && monitorThread.isAlive()) {
+
+        if (monitoring) {
             stopMonitoring();
         } else {
             if (printFolder != null) {
                 try {
                     startMonitoring(printerChoiceBox.getValue());
-                    // Salva a impressora selecionada
                     AppConfig.saveLastPrinter(printerChoiceBox.getValue());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    App.trayIcon.showErrorMessage("Erro ao iniciar serviço.", e.getMessage());
+                } catch (Exception e) {
+                    handleMonitoringError("Erro ao iniciar serviço.", e);
                 }
             }
         }
     }
 
 
-    @FXML
-    void chooseFolder(ActionEvent event) {
-        // Define o evento de clique do botão "Escolher Pasta"
-        DirectoryChooser directoryChooser = new DirectoryChooser();
-        File selectedDirectory = directoryChooser.showDialog(null);
-
-        if (selectedDirectory != null) {
-            folderPathField.setText(selectedDirectory.getAbsolutePath());
-            printFolder = selectedDirectory.getAbsolutePath();
-        }
+    private void handleMonitoringError(String title, Exception e) {
+        e.printStackTrace();
+        Platform.runLater(() -> {
+            App.trayIcon.showErrorMessage(title, e.getMessage());
+            changeMonitoringState(null);
+        });
     }
 
 
-    // Obtém a lista de impressoras disponíveis
-    private List<String> getAvailablePrinters() {
-        ObservableList<Printer> printers = FXCollections.observableArrayList();
-
-        PrinterJob printerJob = PrinterJob.createPrinterJob();
-        if (printerJob != null) {
-            printers.addAll(Printer.getAllPrinters());
-            printerJob.endJob();
-        }
-
-        // Converter a ObservableList<Printer> para uma List<String>
-        List<String> printerNames = new ArrayList<>();
-        for (Printer printer : printers) {
-            printerNames.add(printer.getName());
-        }
-
-        return printerNames;
+    private void handlePrintingError(String title, Exception e) {
+        e.printStackTrace();
+        Platform.runLater(() -> App.trayIcon.showErrorMessage(title, e.getMessage()));
     }
 
 
-    // Inicia o monitoramento da pasta
+    private void updateUI() {
+        chooseFolderButton.setDisable(monitoring);
+        folderPathField.setDisable(monitoring);
+        printerChoiceBox.setDisable(monitoring);
+
+        startButton.setText(monitoring ? "Parar Monitoramento" : "Iniciar Monitoramento");
+        statusIndicator.setFill(monitoring ? Color.GREEN : Color.RED);
+
+        App.trayIcon.setGraphic(App.class.getResource(monitoring ? "/icons/on.png" : "/icons/off.png"));
+    }
+
+
     private void startMonitoring(String selectedPrinter) throws IOException {
         System.out.println("STARTING");
+
+        monitoring = true;
+
         // Cria um WatchService para monitorar a pasta
         watchService = FileSystems.getDefault().newWatchService();
 
@@ -160,30 +154,18 @@ public class MainScreenController implements Initializable {
         // Inicia um thread para ficar observando a pasta
         monitorThread = new Thread(() -> {
             try {
-                while (true) {
+                while (monitoring) {
                     WatchKey watchKey = watchService.take(); // Aguarda um evento de criação de arquivo
 
                     for (WatchEvent<?> event : watchKey.pollEvents()) {
-                        WatchEvent.Kind<?> kind = event.kind();
 
                         // Verifica se o evento é de criação de arquivo
-                        if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
+                        if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
                             Path filePath = folderPath.resolve((Path) event.context());
 
-                            // Verifica se o arquivo é um arquivo de texto
-                            if (Files.isRegularFile(filePath) && filePath.toString().endsWith(extensao)) {
-                                // Lê o conteúdo do arquivo
-                                List<String> lines = Files.readAllLines(filePath);
+                            if (isApplicationFile(filePath)) {
 
-                                // Aqui você pode extrair os dados do arquivo (nome, valor, data) e enviá-los para impressão
-                                // Exemplo de extração de dados simples
-                                String nome = lines.get(0);
-                                String valor = lines.get(1);
-                                String data = lines.get(2);
-
-                                // Imprime os dados
-                                printData(nome, valor, data, selectedPrinter);
-                                App.trayIcon.showInfoMessage("Imprimindo...");
+                                processFileContents(filePath, selectedPrinter);
 
                                 // Apaga o arquivo depois de impresso (opcional)
                                 Files.delete(filePath);
@@ -194,37 +176,88 @@ public class MainScreenController implements Initializable {
                     // Reseta o watch key
                     watchKey.reset();
                 }
-            } catch (InterruptedException | IOException e) {
-                e.printStackTrace();
-                App.trayIcon.showErrorMessage("Erro ao ler arquivo", e.getMessage());
-                stopMonitoring();
+            } catch (Exception e) {
+                handleMonitoringError("Erro ao ler arquivo", e);
             }
         });
 
         // Inicia o thread de monitoramento
         monitorThread.start();
 
-        chooseFolderButton.setDisable(true);
-        folderPathField.setDisable(true);
-        printerChoiceBox.setDisable(true);
-
-        startButton.setText("Parar Monitoramento");
-        statusIndicator.setFill(Color.GREEN);
-
-        App.trayIcon.setGraphic(App.class.getResource("/icons/on.png"));
-        /* App.trayIcon.showInfoMessage("Serviço iniciado..."); */
+        updateUI();
     }
 
 
-    // Para o monitoramento
+    private Boolean isApplicationFile(Path filePath) {
+        return Files.isRegularFile(filePath) && filePath.toString().endsWith(DEFAULT_FILE_EXTENSION);
+    }
+
+
+    /* private void processFileContents(Path filePath, String selectedPrinter) throws IOException {
+        List<String> lines = Files.readAllLines(filePath);
+
+        // Extração dos dados do arquivo
+        String nome = lines.get(0);
+        String valor = lines.get(1);
+        String data = lines.get(2);
+
+        // Imprime os dados
+        printData(nome, valor, data, selectedPrinter);
+        System.out.println("IMPRIMINDO: " + nome + " - " + valor + " - " + data);
+    } */
+
+
+    private void processFileContents(Path filePath, String selectedPrinter) {
+        int maxAttempts = 5; // Número máximo de tentativas
+        int attempt = 1; // Contador de tentativas
+
+        while (attempt <= maxAttempts) {
+            try {
+                // Verifica se o arquivo está acessível
+                if (Files.isReadable(filePath)) {
+                    // O arquivo está acessível, então podemos processá-lo
+                    List<String> lines = Files.readAllLines(filePath);
+
+                    // Verifique se o arquivo tem conteúdo suficiente
+                    if (lines.size() >= 3) {
+                        // Extração dos dados do arquivo
+                        String nome = lines.get(0);
+                        String valor = lines.get(1);
+                        String data = lines.get(2);
+
+                        // Imprime os dados
+                        /* printData(nome, valor, data, selectedPrinter); */
+                        System.out.println("IMPRIMINDO: " + nome + " - " + valor + " - " + data);
+                        return; // Saia do loop, pois o arquivo foi processado com sucesso
+                    } else {
+                        System.err.println("O arquivo não contém dados suficientes.");
+                    }
+                } else {
+                    System.err.println("O arquivo nao está acessivel. Tentativa " + attempt + "/" + maxAttempts);
+                }
+
+                attempt++; // Incrementa o contador de tentativas
+                TimeUnit.SECONDS.sleep(2); // Aguarda 2 segundos antes da próxima tentativa
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+                System.err.println("Erro ao processar o arquivo: " + e.getMessage());
+            }
+        }
+
+        System.err.println("Nao foi possivel acessar o arquivo apos " + maxAttempts + " tentativas.");
+    }
+
+
     private void stopMonitoring() {
         System.out.println("STOPING");
+
+        monitoring = false;
+
         if (watchService != null) {
             try {
                 watchService.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-                App.trayIcon.showErrorMessage("Erro ao encerrar serviço.", e.getMessage());
+            } catch (Exception e) {
+                handleMonitoringError("Erro ao encerrar serviço.", e);
             }
         }
 
@@ -232,40 +265,52 @@ public class MainScreenController implements Initializable {
             monitorThread.interrupt();
         }
 
-        chooseFolderButton.setDisable(false);
-        folderPathField.setDisable(false);
-        printerChoiceBox.setDisable(false);
+        updateUI();
+    }
 
-        startButton.setText("Iniciar Monitoramento");
-        statusIndicator.setFill(Color.RED);
 
-        App.trayIcon.setGraphic(App.class.getResource("/icons/off.png"));
-        /* App.trayIcon.showInfoMessage("Serviço encerrado..."); */
+    @FXML
+    void chooseFolder(ActionEvent event) {
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        File selectedDirectory = directoryChooser.showDialog(null);
+
+        if (selectedDirectory != null) {
+            folderPathField.setText(selectedDirectory.getAbsolutePath());
+            printFolder = selectedDirectory.getAbsolutePath();
+        }
+    }
+
+
+    private List<String> getAvailablePrinters() {
+        ObservableList<Printer> printers = FXCollections.observableArrayList();
+
+        PrinterJob printerJob = PrinterJob.createPrinterJob();
+        if (printerJob != null) {
+            printers.addAll(Printer.getAllPrinters());
+            printerJob.endJob();
+        }
+
+        List<String> printerNames = new ArrayList<>();
+        for (Printer printer : printers) {
+            printerNames.add(printer.getName());
+        }
+
+        return printerNames;
     }
 
 
     public static String getDownloadFolderPath() {
         String userHome = System.getProperty("user.home");
-        String downloadFolder = userHome + "\\Downloads";
-        return downloadFolder;
+        return userHome + "\\Downloads";
     }
 
 
-    // Método para imprimir os dados
     private void printData(String nome, String valor, String data, String selectedPrinter) throws IOException {
-        PrintService printService = null;
-
-        PrintService[] availablePrinters = PrintServiceLookup.lookupPrintServices(null, null);
-
-        for (PrintService printer : availablePrinters) {
-            if (printer.getName().equals(selectedPrinter)) {
-                printService = printer;
-            }
-        }
+        PrintService printService = getPrintService(selectedPrinter);
 
         if (printService == null) {
-            System.out.println("Impressora não encontrada.");
-            App.trayIcon.showErrorMessage("Erro ao imprimir.", "Impressora não encontrada.");
+            Exception e = new NameNotFoundException();
+            handlePrintingError("Impressora não encontrada.", e);
             return;
         }
 
@@ -323,15 +368,28 @@ public class MainScreenController implements Initializable {
 
             escpos.close();
 
+            App.trayIcon.showInfoMessage("Impresso com sucesso");
+
         } catch (IOException e) {
-            e.printStackTrace();
-            App.trayIcon.showErrorMessage("Erro ao imprimir.", e.getMessage());
+            handlePrintingError("Erro ao imprimir.", e);
         }
     }
 
 
+    private PrintService getPrintService(String selectedPrinter) {
+        PrintService[] availablePrinters = PrintServiceLookup.lookupPrintServices(null, null);
+
+        for (PrintService printer : availablePrinters) {
+            if (printer.getName().equals(selectedPrinter)) {
+                return printer;
+            }
+        }
+        return null;
+    }
+
+
     public void exitApplication() {
-        if (monitorThread != null && monitorThread.isAlive()) {
+        if (monitoring) {
             stopMonitoring();
         }
 
@@ -340,7 +398,13 @@ public class MainScreenController implements Initializable {
     }
 
 
-    public Boolean isDoidera() {
-        return this.doidera;
+    public void start(Stage stage) {
+        if (hasConfig) {
+            stage.hide();
+            changeMonitoringState(null);
+            App.trayIcon.showInfoMessage("Serviço iniciado...");
+        } else {
+            stage.show();
+        }
     }
 }

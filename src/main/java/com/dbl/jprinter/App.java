@@ -1,6 +1,5 @@
 package com.dbl.jprinter;
 
-import java.io.File;
 import java.io.IOException;
 
 import com.dustinredmond.fxtrayicon.FXTrayIcon;
@@ -30,18 +29,15 @@ public class App extends Application {
         scene = new Scene(root);
         controller = loader.getController();
 
-        userSettingsSetup();
+        AppConfig.createConfigFile();
         trayIconSetup(stage);
 
         stage.setTitle("Jprinter");
         stage.setResizable(false);
 
         stage.setScene(scene);
-        stage.hide();
 
-        if (controller.isDoidera()) {
-            controller.changeMonitoringState(null);
-        }
+        controller.start(stage);
     }
 
 
@@ -71,19 +67,6 @@ public class App extends Application {
         trayIcon.addMenuItem(settingsItem);
 
         trayIcon.show();
-    }
-
-
-    public void userSettingsSetup() {
-        File configFile = new File("config.txt");
-        if (!configFile.exists()) {
-            try {
-                configFile.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-                System.err.println("Erro ao criar arquivo de configuração: " + e.getMessage());
-            }
-        }
     }
 
 
