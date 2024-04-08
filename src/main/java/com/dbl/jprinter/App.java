@@ -25,17 +25,16 @@ public class App extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
+        loader = loadFXML("MainScreen");
+        root = loader.load();
+        scene = new Scene(root);
+        controller = loader.getController();
+
+        userSettingsSetup();
+        trayIconSetup(stage);
+
         stage.setTitle("Jprinter");
         stage.setResizable(false);
-
-            userSettingsSetup();
-            trayIconSetup(stage);
-
-            loader = loadFXML("MainScreen");
-            root = loader.load();
-            scene = new Scene(root);
-
-            controller = loader.getController();
 
         stage.setScene(scene);
         stage.hide();
