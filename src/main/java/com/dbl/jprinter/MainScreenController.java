@@ -208,43 +208,38 @@ public class MainScreenController implements Initializable {
 
 
     private void processFileContents(Path filePath, String selectedPrinter) {
-        int maxAttempts = 5; // Número máximo de tentativas
-        int attempt = 1; // Contador de tentativas
+        int maxAttempts = 5;
+        int attempt = 1;
 
         while (attempt <= maxAttempts) {
             try {
-                // Verifica se o arquivo está acessível
                 if (Files.isReadable(filePath)) {
-                    // O arquivo está acessível, então podemos processá-lo
                     List<String> lines = Files.readAllLines(filePath);
 
-                    // Verifique se o arquivo tem conteúdo suficiente
                     if (lines.size() >= 3) {
-                        // Extração dos dados do arquivo
                         String nome = lines.get(0);
                         String valor = lines.get(1);
                         String data = lines.get(2);
 
-                        // Imprime os dados
+
                         /* printData(nome, valor, data, selectedPrinter); */
                         System.out.println("IMPRIMINDO: " + nome + " - " + valor + " - " + data);
-                        return; // Saia do loop, pois o arquivo foi processado com sucesso
+                        return;
                     } else {
-                        System.err.println("O arquivo não contém dados suficientes.");
+                        System.out.println("O arquivo nao contem dados suficientes.");
                     }
                 } else {
-                    System.err.println("O arquivo nao está acessivel. Tentativa " + attempt + "/" + maxAttempts);
+                    System.out.println("O arquivo nao esta acessivel. Tentativa " + attempt + "/" + maxAttempts);
                 }
 
-                attempt++; // Incrementa o contador de tentativas
-                TimeUnit.SECONDS.sleep(2); // Aguarda 2 segundos antes da próxima tentativa
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
-                System.err.println("Erro ao processar o arquivo: " + e.getMessage());
+                attempt++;
+                TimeUnit.SECONDS.sleep(2);
+            } catch (Exception e) {
+                handlePrintingError("Erro ao processar o arquivo: ", e);
             }
         }
 
-        System.err.println("Nao foi possivel acessar o arquivo apos " + maxAttempts + " tentativas.");
+        System.out.println("Nao foi possivel acessar o arquivo apos " + maxAttempts + " tentativas.");
     }
 
 
