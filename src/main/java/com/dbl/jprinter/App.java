@@ -1,5 +1,6 @@
 package com.dbl.jprinter;
 
+import java.io.File;
 import java.io.IOException;
 
 import com.dustinredmond.fxtrayicon.FXTrayIcon;
@@ -17,30 +18,44 @@ public class App extends Application {
     private static Scene scene;
     public static FXTrayIcon trayIcon;
 
-    private MainScreenController msc;
+    private static MainScreenController msc;
 
 
     @Override
     public void start(Stage primaryStage) throws IOException {
+        // Verifica se o arquivo de configuração existe, se não existir, cria-o
+        File configFile = new File("config.txt");
+        if (!configFile.exists()) {
+            try {
+                configFile.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.err.println("Erro ao criar arquivo de configuração: " + e.getMessage());
+            }
+        }
+
         primaryStage.setTitle("Jprinter");
         primaryStage.setResizable(false);
 
         scene = new Scene(loadFXML("MainScreen"));
+        msc = new MainScreenController();
 
         trayIcon = new FXTrayIcon(primaryStage, getClass().getResource("/icons/off.png"));
 
-        trayIcon.addExitItem("Fechar");
-        MenuItem monitoringItem = new MenuItem("Iniciar monitoramento", null);
+        trayIcon.addExitItem("Sair", e -> msc.exitApplication());
+        MenuItem settingsItem = new MenuItem("Configurações", null);
 
-        msc = new MainScreenController();
+        settingsItem.setOnAction(e -> {
+            primaryStage.show();
+            primaryStage.toFront();
+        });
 
-        monitoringItem.setOnAction(e -> msc.changeMonitoringState(e));
-        trayIcon.addMenuItem(monitoringItem);
+        trayIcon.addMenuItem(settingsItem);
 
         trayIcon.show();
 
         primaryStage.setScene(scene);
-        primaryStage.show();
+        primaryStage.hide();
     }
 
 

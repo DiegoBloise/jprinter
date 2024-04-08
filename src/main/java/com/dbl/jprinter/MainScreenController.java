@@ -24,6 +24,7 @@ import com.github.anastaciocintra.escpos.PrintModeStyle;
 import com.github.anastaciocintra.escpos.Style;
 import com.github.anastaciocintra.output.PrinterOutputStream;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -49,17 +50,6 @@ public class MainScreenController implements Initializable {
 
     private Thread monitorThread;
 
-
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        ObservableList<String> printerNames = FXCollections.observableArrayList(getAvailablePrinters());
-        printerChoiceBox.setItems(printerNames);
-        printerChoiceBox.setValue(printerNames.get(0));
-        folderPathField.setText(getDownloadFolderPath());
-        printFolder = getDownloadFolderPath();
-    }
-
-
     @FXML
     private Button chooseFolderButton;
 
@@ -76,20 +66,46 @@ public class MainScreenController implements Initializable {
     private Button startButton;
 
     @FXML
+    private Button exitButton;
+
+    @FXML
     private Circle statusIndicator;
+
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+
+    }
+
+
+    public void init(){
+        folderPathField.setText(getDownloadFolderPath());
+        printFolder = getDownloadFolderPath();
+
+        ObservableList<String> printerNames = FXCollections.observableArrayList(getAvailablePrinters());
+        printerChoiceBox.setItems(printerNames);
+
+        String lastPrinter = AppConfig.loadLastPrinter();
+        if (lastPrinter != null && printerNames.contains(lastPrinter)) {
+            printerChoiceBox.setValue(lastPrinter);
+            //Deveria chamar aqui changeMonitoringState()
+        } else {
+            printerChoiceBox.setValue(printerNames.get(0));
+        }
+    }
 
 
     @FXML
     public void changeMonitoringState(ActionEvent event) {
-        // Define o evento de clique do botão "Iniciar Monitoramento"
+        System.out.println("CHANGING STATE");
         if (monitorThread != null && monitorThread.isAlive()) {
-            // Se o monitoramento estiver em andamento, para o monitoramento
             stopMonitoring();
         } else {
-            // Caso contrário, inicia o monitoramento
             if (printFolder != null) {
                 try {
                     startMonitoring(printerChoiceBox.getValue());
+                    // Salva a impressora selecionada
+                    AppConfig.saveLastPrinter(printerChoiceBox.getValue());
                 } catch (IOException e) {
                     e.printStackTrace();
                     App.trayIcon.showErrorMessage("Erro ao iniciar serviço.", e.getMessage());
@@ -134,6 +150,7 @@ public class MainScreenController implements Initializable {
 
     // Inicia o monitoramento da pasta
     private void startMonitoring(String selectedPrinter) throws IOException {
+        System.out.println("STARTING");
         // Cria um WatchService para monitorar a pasta
         watchService = FileSystems.getDefault().newWatchService();
 
@@ -196,12 +213,13 @@ public class MainScreenController implements Initializable {
         statusIndicator.setFill(Color.GREEN);
 
         App.trayIcon.setGraphic(App.class.getResource("/icons/on.png"));
-        App.trayIcon.showInfoMessage("Serviço iniciado...");
+        /* App.trayIcon.showInfoMessage("Serviço iniciado..."); */
     }
 
 
     // Para o monitoramento
     private void stopMonitoring() {
+        System.out.println("STOPING");
         if (watchService != null) {
             try {
                 watchService.close();
@@ -223,7 +241,7 @@ public class MainScreenController implements Initializable {
         statusIndicator.setFill(Color.RED);
 
         App.trayIcon.setGraphic(App.class.getResource("/icons/off.png"));
-        App.trayIcon.showInfoMessage("Serviço encerrado...");
+        /* App.trayIcon.showInfoMessage("Serviço encerrado..."); */
     }
 
 
@@ -264,9 +282,9 @@ public class MainScreenController implements Initializable {
                     .setFontSize(Style.FontSize._3, Style.FontSize._3)
                     .setJustification(EscPosConst.Justification.Center);
 
-            Style subtitle = new Style(escpos.getStyle())
+            /* Style subtitle = new Style(escpos.getStyle())
                     .setBold(true)
-                    .setUnderline(Style.Underline.OneDotThick);
+                    .setUnderline(Style.Underline.OneDotThick); */
 
             Style bold = new Style(escpos.getStyle())
                     .setBold(true);
@@ -310,5 +328,15 @@ public class MainScreenController implements Initializable {
             e.printStackTrace();
             App.trayIcon.showErrorMessage("Erro ao imprimir.", e.getMessage());
         }
+    }
+
+
+    public void exitApplication() {
+        if (monitorThread != null && monitorThread.isAlive()) {
+            stopMonitoring();
+        }
+
+        Platform.exit();
+        System.exit(0);
     }
 }
