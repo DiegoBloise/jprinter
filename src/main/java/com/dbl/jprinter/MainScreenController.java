@@ -50,6 +50,8 @@ public class MainScreenController implements Initializable {
 
     private Thread monitorThread;
 
+    private Boolean doidera;
+
     @FXML
     private Button chooseFolderButton;
 
@@ -74,11 +76,8 @@ public class MainScreenController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        doidera = false;
 
-    }
-
-
-    public void init(){
         folderPathField.setText(getDownloadFolderPath());
         printFolder = getDownloadFolderPath();
 
@@ -88,7 +87,7 @@ public class MainScreenController implements Initializable {
         String lastPrinter = AppConfig.loadLastPrinter();
         if (lastPrinter != null && printerNames.contains(lastPrinter)) {
             printerChoiceBox.setValue(lastPrinter);
-            //Deveria chamar aqui changeMonitoringState()
+            doidera = true;
         } else {
             printerChoiceBox.setValue(printerNames.get(0));
         }
@@ -338,5 +337,10 @@ public class MainScreenController implements Initializable {
 
         Platform.exit();
         System.exit(0);
+    }
+
+
+    public Boolean isDoidera() {
+        return this.doidera;
     }
 }

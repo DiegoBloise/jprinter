@@ -15,15 +15,67 @@ import javafx.stage.Stage;
 
 public class App extends Application {
 
-    private static Scene scene;
+    private Scene scene;
+    private Parent root;
+    private FXMLLoader loader;
+
+    private MainScreenController controller;
+
     public static FXTrayIcon trayIcon;
 
-    private static MainScreenController msc;
-
-
     @Override
-    public void start(Stage primaryStage) throws IOException {
-        // Verifica se o arquivo de configuração existe, se não existir, cria-o
+    public void start(Stage stage) throws IOException {
+        stage.setTitle("Jprinter");
+        stage.setResizable(false);
+
+            userSettingsSetup();
+            trayIconSetup(stage);
+
+            loader = loadFXML("MainScreen");
+            root = loader.load();
+            scene = new Scene(root);
+
+            controller = loader.getController();
+
+        stage.setScene(scene);
+        stage.hide();
+
+        if (controller.isDoidera()) {
+            controller.changeMonitoringState(null);
+        }
+    }
+
+
+    public void setRoot(String fxml) throws IOException {
+        scene.setRoot(loadFXML(fxml).load());
+    }
+
+
+    private FXMLLoader loadFXML(String fxml) throws IOException {
+        FXMLLoader loader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
+        return loader;
+    }
+
+
+    public void trayIconSetup(Stage stage) {
+
+        trayIcon = new FXTrayIcon(stage, getClass().getResource("/icons/off.png"));
+
+        trayIcon.addExitItem("Sair", e -> controller.exitApplication());
+        MenuItem settingsItem = new MenuItem("Configurações", null);
+
+        settingsItem.setOnAction(e -> {
+            stage.show();
+            stage.toFront();
+        });
+
+        trayIcon.addMenuItem(settingsItem);
+
+        trayIcon.show();
+    }
+
+
+    public void userSettingsSetup() {
         File configFile = new File("config.txt");
         if (!configFile.exists()) {
             try {
@@ -33,40 +85,6 @@ public class App extends Application {
                 System.err.println("Erro ao criar arquivo de configuração: " + e.getMessage());
             }
         }
-
-        primaryStage.setTitle("Jprinter");
-        primaryStage.setResizable(false);
-
-        scene = new Scene(loadFXML("MainScreen"));
-        msc = new MainScreenController();
-
-        trayIcon = new FXTrayIcon(primaryStage, getClass().getResource("/icons/off.png"));
-
-        trayIcon.addExitItem("Sair", e -> msc.exitApplication());
-        MenuItem settingsItem = new MenuItem("Configurações", null);
-
-        settingsItem.setOnAction(e -> {
-            primaryStage.show();
-            primaryStage.toFront();
-        });
-
-        trayIcon.addMenuItem(settingsItem);
-
-        trayIcon.show();
-
-        primaryStage.setScene(scene);
-        primaryStage.hide();
-    }
-
-
-    public static void setRoot(String fxml) throws IOException {
-        scene.setRoot(loadFXML(fxml));
-    }
-
-
-    private static Parent loadFXML(String fxml) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(App.class.getResource(fxml + ".fxml"));
-        return fxmlLoader.load();
     }
 
 
