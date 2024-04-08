@@ -222,7 +222,7 @@ public class MainScreenController implements Initializable {
                         String data = lines.get(2);
 
 
-                        /* printData(nome, valor, data, selectedPrinter); */
+                        printData(nome, valor, data, selectedPrinter);
                         System.out.println("IMPRIMINDO: " + nome + " - " + valor + " - " + data);
                         return;
                     } else {
