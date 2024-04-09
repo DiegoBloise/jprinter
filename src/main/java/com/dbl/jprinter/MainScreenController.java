@@ -3,6 +3,7 @@ package com.dbl.jprinter;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.ClosedWatchServiceException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -93,37 +94,21 @@ public class MainScreenController implements Initializable {
     }
 
 
+    public static String getDownloadFolderPath() {
+        String userHome = System.getProperty("user.home");
+        return userHome + "\\Downloads";
+    }
+
+
     @FXML
-    public void changeMonitoringState(ActionEvent event) {
-        System.out.println("CHANGING STATE");
+    void chooseFolder(ActionEvent event) {
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        File selectedDirectory = directoryChooser.showDialog(null);
 
-        if (monitoring) {
-            stopMonitoring();
-        } else {
-            if (printFolder != null) {
-                try {
-                    startMonitoring(printerChoiceBox.getValue());
-                    AppConfig.saveLastPrinter(printerChoiceBox.getValue());
-                } catch (Exception e) {
-                    handleMonitoringError("Erro ao iniciar serviço.", e);
-                }
-            }
+        if (selectedDirectory != null) {
+            folderPathField.setText(selectedDirectory.getAbsolutePath());
+            printFolder = selectedDirectory.getAbsolutePath();
         }
-    }
-
-
-    private void handleMonitoringError(String title, Exception e) {
-        e.printStackTrace();
-        Platform.runLater(() -> {
-            App.trayIcon.showErrorMessage(title, e.getMessage());
-            changeMonitoringState(null);
-        });
-    }
-
-
-    private void handlePrintingError(String title, Exception e) {
-        e.printStackTrace();
-        Platform.runLater(() -> App.trayIcon.showErrorMessage(title, e.getMessage()));
     }
 
 
@@ -139,8 +124,27 @@ public class MainScreenController implements Initializable {
     }
 
 
+    @FXML
+    public void changeMonitoringState(ActionEvent event) {
+        Log.Info("CHANGING STATE");
+
+        if (monitoring) {
+            stopMonitoring();
+        } else {
+            if (printFolder != null) {
+                try {
+                    startMonitoring(printerChoiceBox.getValue());
+                    AppConfig.saveLastPrinter(printerChoiceBox.getValue());
+                } catch (Exception e) {
+                    handleMonitoringError("Erro ao iniciar servico: ", e);
+                }
+            }
+        }
+    }
+
+
     private void startMonitoring(String selectedPrinter) throws IOException {
-        System.out.println("STARTING");
+        Log.Info("STARTING");
 
         monitoring = true;
 
@@ -151,7 +155,7 @@ public class MainScreenController implements Initializable {
         Path folderPath = Paths.get(printFolder);
         folderPath.register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
 
-        // Inicia um thread para ficar observando a pasta
+        // Thread para monitoramento da pasta
         monitorThread = new Thread(() -> {
             try {
                 while (monitoring) {
@@ -176,8 +180,10 @@ public class MainScreenController implements Initializable {
                     // Reseta o watch key
                     watchKey.reset();
                 }
+            } catch (ClosedWatchServiceException e) {
+
             } catch (Exception e) {
-                handleMonitoringError("Erro ao ler arquivo", e);
+                handleMonitoringError("Erro ao ler arquivo: ", e);
             }
         });
 
@@ -191,20 +197,6 @@ public class MainScreenController implements Initializable {
     private Boolean isApplicationFile(Path filePath) {
         return Files.isRegularFile(filePath) && filePath.toString().endsWith(DEFAULT_FILE_EXTENSION);
     }
-
-
-    /* private void processFileContents(Path filePath, String selectedPrinter) throws IOException {
-        List<String> lines = Files.readAllLines(filePath);
-
-        // Extração dos dados do arquivo
-        String nome = lines.get(0);
-        String valor = lines.get(1);
-        String data = lines.get(2);
-
-        // Imprime os dados
-        printData(nome, valor, data, selectedPrinter);
-        System.out.println("IMPRIMINDO: " + nome + " - " + valor + " - " + data);
-    } */
 
 
     private void processFileContents(Path filePath, String selectedPrinter) {
@@ -223,13 +215,15 @@ public class MainScreenController implements Initializable {
 
 
                         printData(nome, valor, data, selectedPrinter);
-                        System.out.println("IMPRIMINDO: " + nome + " - " + valor + " - " + data);
+
+                        Log.Info("IMPRIMINDO: " + nome + " - " + valor + " - " + data);
+
                         return;
                     } else {
-                        System.out.println("O arquivo nao contem dados suficientes.");
+                        Log.Error("O arquivo nao contem dados suficientes", null);
                     }
                 } else {
-                    System.out.println("O arquivo nao esta acessivel. Tentativa " + attempt + "/" + maxAttempts);
+                    Log.Error("O arquivo nao esta acessivel. Tentativa " + attempt + "/" + maxAttempts, null);
                 }
 
                 attempt++;
@@ -239,20 +233,20 @@ public class MainScreenController implements Initializable {
             }
         }
 
-        System.out.println("Nao foi possivel acessar o arquivo apos " + maxAttempts + " tentativas.");
+        Log.Error("Nao foi possivel acessar o arquivo apos " + maxAttempts + " tentativas.", null);
     }
 
 
     private void stopMonitoring() {
-        System.out.println("STOPING");
+        Log.Info("STOPING");
 
         monitoring = false;
 
-        if (watchService != null) {
+        if (watchService != null ) {
             try {
                 watchService.close();
             } catch (Exception e) {
-                handleMonitoringError("Erro ao encerrar serviço.", e);
+                handleMonitoringError("Erro ao encerrar servico: ", e);
             }
         }
 
@@ -264,48 +258,12 @@ public class MainScreenController implements Initializable {
     }
 
 
-    @FXML
-    void chooseFolder(ActionEvent event) {
-        DirectoryChooser directoryChooser = new DirectoryChooser();
-        File selectedDirectory = directoryChooser.showDialog(null);
-
-        if (selectedDirectory != null) {
-            folderPathField.setText(selectedDirectory.getAbsolutePath());
-            printFolder = selectedDirectory.getAbsolutePath();
-        }
-    }
-
-
-    private List<String> getAvailablePrinters() {
-        ObservableList<Printer> printers = FXCollections.observableArrayList();
-
-        PrinterJob printerJob = PrinterJob.createPrinterJob();
-        if (printerJob != null) {
-            printers.addAll(Printer.getAllPrinters());
-            printerJob.endJob();
-        }
-
-        List<String> printerNames = new ArrayList<>();
-        for (Printer printer : printers) {
-            printerNames.add(printer.getName());
-        }
-
-        return printerNames;
-    }
-
-
-    public static String getDownloadFolderPath() {
-        String userHome = System.getProperty("user.home");
-        return userHome + "\\Downloads";
-    }
-
-
     private void printData(String nome, String valor, String data, String selectedPrinter) throws IOException {
         PrintService printService = getPrintService(selectedPrinter);
 
         if (printService == null) {
             Exception e = new NameNotFoundException();
-            handlePrintingError("Impressora não encontrada.", e);
+            handlePrintingError("Impressora nao encontrada: ", e);
             return;
         }
 
@@ -365,8 +323,8 @@ public class MainScreenController implements Initializable {
 
             App.trayIcon.showInfoMessage("Impresso com sucesso");
 
-        } catch (IOException e) {
-            handlePrintingError("Erro ao imprimir.", e);
+        } catch (Exception e) {
+            handlePrintingError("Erro ao imprimir: ", e);
         }
     }
 
@@ -383,13 +341,36 @@ public class MainScreenController implements Initializable {
     }
 
 
-    public void exitApplication() {
-        if (monitoring) {
-            stopMonitoring();
+    private List<String> getAvailablePrinters() {
+        ObservableList<Printer> printers = FXCollections.observableArrayList();
+
+        PrinterJob printerJob = PrinterJob.createPrinterJob();
+        if (printerJob != null) {
+            printers.addAll(Printer.getAllPrinters());
+            printerJob.endJob();
         }
 
-        Platform.exit();
-        System.exit(0);
+        List<String> printerNames = new ArrayList<>();
+        for (Printer printer : printers) {
+            printerNames.add(printer.getName());
+        }
+
+        return printerNames;
+    }
+
+
+    private void handleMonitoringError(String title, Exception e) {
+        e.printStackTrace();
+        Platform.runLater(() -> {
+            App.trayIcon.showErrorMessage(title, e.getMessage());
+            stopMonitoring();
+        });
+    }
+
+
+    private void handlePrintingError(String title, Exception e) {
+        e.printStackTrace();
+        Platform.runLater(() -> App.trayIcon.showErrorMessage(title, e.getMessage()));
     }
 
 
@@ -401,5 +382,15 @@ public class MainScreenController implements Initializable {
         } else {
             stage.show();
         }
+    }
+
+
+    public void exitApplication() {
+        if (monitoring) {
+            stopMonitoring();
+        }
+
+        Platform.exit();
+        System.exit(0);
     }
 }

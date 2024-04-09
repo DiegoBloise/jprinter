@@ -29,10 +29,10 @@ public class App extends Application {
         scene = new Scene(root);
         controller = loader.getController();
 
-        AppConfig.createConfigFile();
+        AppConfig.setup();
         trayIconSetup(stage);
 
-        stage.setTitle("Jprinter");
+        stage.setTitle("JPrinter");
         stage.setResizable(false);
 
         stage.setScene(scene);
