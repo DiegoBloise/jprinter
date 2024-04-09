@@ -100,7 +100,7 @@
                 <configuration>
                     <name>jprinter</name>
                     <appVersion>1.0.0</appVersion>
-                    <vendor>com.acme</vendor>
+                    <vendor>com.dbl</vendor>
                     <destination>target/dist</destination>
                     <module>jprinter/com.dbl.jprinter.Launcher</module>
                     <runtimeImage>target/jprinter</runtimeImage>
