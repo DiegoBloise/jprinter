@@ -6,12 +6,20 @@
     <artifactId>jprinter</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <packaging>jar</packaging>
+
+    <name>jprinter</name>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>17</maven.compiler.release>
         <javafx.version>22</javafx.version>
         <javafx.maven.plugin.version>0.0.8</javafx.maven.plugin.version>
     </properties>
+
+    <organization>
+        <name>DBL SOFTWARE</name>
+    </organization>
 
     <dependencies>
 
@@ -33,12 +41,6 @@
             <version>4.0.1</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.github.anastaciocintra</groupId>
-            <artifactId>escpos-coffee</artifactId>
-            <version>4.1.0</version>
-        </dependency>
-
     </dependencies>
 
     <build>
@@ -48,6 +50,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -78,17 +81,52 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>${javafx.maven.plugin.version}</version>
                 <configuration>
-                    <mainClass>com.dbl.jprinter.Launcher</mainClass>
+                    <jlinkImageName>jprinter</jlinkImageName>
+                    <jlinkZipName>jprinter</jlinkZipName>
+                    <launcher>jprinter</launcher>
+                    <mainClass>jprinter/com.dbl.jprinter.Launcher</mainClass>
+                    <noManPages>true</noManPages>
+                    <noHeaderFiles>true</noHeaderFiles>
+                    <stripDebug>true</stripDebug>
+                    <stripJavaDebugAttributes>true</stripJavaDebugAttributes>
+                    <compress>2</compress>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>javafx-jlink</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>javafx</goal>
-                        </goals>
-                    </execution>
-                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.panteleyev</groupId>
+                <artifactId>jpackage-maven-plugin</artifactId>
+                <version>1.6.3</version>
+                <configuration>
+                    <name>jprinter</name>
+                    <appVersion>1.0.0</appVersion>
+                    <vendor>com.acme</vendor>
+                    <destination>target/dist</destination>
+                    <module>jprinter/com.dbl.jprinter.Launcher</module>
+                    <runtimeImage>target/jprinter</runtimeImage>
+                    <linuxShortcut>true</linuxShortcut>
+                    <linuxPackageName>jprinter</linuxPackageName>
+                    <linuxAppCategory>Utilities</linuxAppCategory>
+                    <linuxMenuGroup>Utilities</linuxMenuGroup>
+                    <icon>${project.basedir}/src/main/resources/icons/on.png</icon>
+                    <shortcut>
+                        <name>jprinter</name>
+                        <description>Serviço de monitoramento de arquivos para impressão.</description>
+                        <desktop>true</desktop>
+                    </shortcut>
+                    <winMenu>false</winMenu>
+                    <winDirChooser>false</winDirChooser>
+                    <winPerUserInstall>true</winPerUserInstall>
+                    <winShortcut>true</winShortcut>
+                    <macBundle>false</macBundle>
+                    <macPackage>true</macPackage>
+                    <linuxDeb>false</linuxDeb>
+                    <linuxRpm>false</linuxRpm>
+
+                    <javaOptions>
+                      <option>-Dfile.encoding=UTF-8</option>
+                    </javaOptions>
+                  </configuration>
             </plugin>
 
         </plugins>
