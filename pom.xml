@@ -108,7 +108,7 @@
                     <linuxPackageName>jprinter</linuxPackageName>
                     <linuxAppCategory>Utilities</linuxAppCategory>
                     <linuxMenuGroup>Utilities</linuxMenuGroup>
-                    <icon>${project.basedir}/src/main/resources/icons/on.png</icon>
+                    <icon>${project.basedir}/src/main/resources/icons/on.ico</icon>
                     <shortcut>
                         <name>jprinter</name>
                         <description>Serviço de monitoramento de arquivos para impressão.</description>
