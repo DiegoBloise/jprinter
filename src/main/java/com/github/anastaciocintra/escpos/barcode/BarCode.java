@@ -10,6 +10,7 @@ import java.io.ByteArrayOutputStream;
 /**
  * Supply ESC/POS BarCode commands  
  */
+@SuppressWarnings("rawtypes")
 public class BarCode implements EscPosConst, BarCodeWrapperInterface{
     
     /**

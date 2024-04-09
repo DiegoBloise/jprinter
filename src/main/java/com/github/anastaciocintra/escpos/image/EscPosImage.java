@@ -17,7 +17,9 @@ public class EscPosImage {
     protected final Bitonal bitonalAlgorithm;
 
     protected ByteArrayOutputStream baCachedEscPosRaster = new ByteArrayOutputStream();
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     protected List< ByteArrayOutputStream > CashedEscPosRasterRows_8 = new ArrayList();
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     protected List< ByteArrayOutputStream > CachedEscPosRasterRows_24 = new ArrayList();
 
 
@@ -84,9 +86,11 @@ public class EscPosImage {
      * @return a list of rows in raster pattern
      */
     protected  List< ByteArrayOutputStream > image2Rows(int bitsPerColumn_8_or_24){
+        @SuppressWarnings({ "rawtypes", "unchecked" })
         List< ByteArrayOutputStream > lRasterRows = new ArrayList();
         
         
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         List<CoffeeImage> lRGBImageRows = new ArrayList();
         for(int y = 0; y < image.getHeight();y+=bitsPerColumn_8_or_24){
             int height = bitsPerColumn_8_or_24;

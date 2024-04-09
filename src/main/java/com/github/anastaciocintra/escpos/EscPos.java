@@ -429,7 +429,7 @@ public class EscPos implements Closeable, Flushable, EscPosConst {
      * @exception IOException if an I/O error occurs.
      * @see BarCodeWrapperInterface
      */
-    public EscPos write(BarCodeWrapperInterface barcode, String data) throws IOException {
+    public EscPos write(@SuppressWarnings("rawtypes") BarCodeWrapperInterface barcode, String data) throws IOException {
         byte[] bytes = barcode.getBytes(data);
         write(bytes, 0, bytes.length);
         return this;
@@ -445,7 +445,7 @@ public class EscPos implements Closeable, Flushable, EscPosConst {
      * @exception IOException if an I/O error occurs.
      * @see ImageWrapperInterface
      */
-    public EscPos write(ImageWrapperInterface wrapper, EscPosImage image) throws IOException {
+    public EscPos write(@SuppressWarnings("rawtypes") ImageWrapperInterface wrapper, EscPosImage image) throws IOException {
         byte[] bytes = wrapper.getBytes(image);
         write(bytes, 0, bytes.length);
         return this;

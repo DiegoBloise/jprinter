@@ -12,6 +12,7 @@ import java.util.List;
  * Supply ESC/POS Bit Image commands.<p>
  * using <code>ESC '*'</code>
  */
+@SuppressWarnings("rawtypes")
 public class BitImageWrapper implements ImageWrapperInterface, EscPosConst{
     /**
      * Values for Bit Image Mode.

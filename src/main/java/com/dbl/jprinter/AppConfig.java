@@ -9,11 +9,22 @@ import java.io.IOException;
 
 public class AppConfig {
 
-    private static final String FILE_PATH = "config.txt";
+    private static final String CONFIG_FOLDER_PATH = System.getenv("APPDATA") + "\\JPrinter";
+    private static final String FILE_PATH = CONFIG_FOLDER_PATH + "\\config.txt";
 
 
     public static void createConfigFile() {
-        File configFile = new File("config.txt");
+        File jPrinterDir = new File(CONFIG_FOLDER_PATH);
+        if (!jPrinterDir.exists()) {
+            try {
+                jPrinterDir.mkdirs();
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.err.println("Falha ao criar a pasta JPrinter: " + e.getMessage());
+            }
+        }
+
+        File configFile = new File(FILE_PATH);
         if (!configFile.exists()) {
             try {
                 configFile.createNewFile();

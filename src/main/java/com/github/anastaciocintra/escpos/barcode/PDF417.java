@@ -10,6 +10,7 @@ import java.io.ByteArrayOutputStream;
 /**
  * Supply ESC/POS PDF417 bar-code commands
  */
+@SuppressWarnings("rawtypes")
 public class PDF417 implements EscPosConst, BarCodeWrapperInterface{
 
 

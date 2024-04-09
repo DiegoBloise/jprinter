@@ -11,6 +11,7 @@ import java.io.ByteArrayOutputStream;
 /**
  * Supply ESC/POS QRCode bar-code commands
  */
+@SuppressWarnings("rawtypes")
 public class QRCode implements EscPosConst, BarCodeWrapperInterface{
     
     /**

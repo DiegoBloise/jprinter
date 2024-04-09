@@ -12,6 +12,7 @@ import java.io.ByteArrayOutputStream;
  * Supply ESC/POS Raster bit Image commands.<p>
  * using <code>GS 'v' '0'</code>
  */
+@SuppressWarnings({ "unused", "rawtypes" })
 public class RasterBitImageWrapper implements EscPosConst, ImageWrapperInterface{
     /**
      * Values for Raster Bit Image mode.

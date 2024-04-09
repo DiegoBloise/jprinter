@@ -12,6 +12,7 @@ import java.io.ByteArrayOutputStream;
  * Supply ESC/POS Graphics print Image commands.<p>
  * using <code>GS(L</code>
  */
+@SuppressWarnings({ "unused", "rawtypes" })
 public class GraphicsImageWrapper implements EscPosConst, ImageWrapperInterface{
     
     /**
