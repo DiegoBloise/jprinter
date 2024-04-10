@@ -1,5 +1,6 @@
 package com.dbl.jprinter;
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -220,10 +221,12 @@ public class MainScreenController implements Initializable {
 
                         return;
                     } else {
-                        Log.Error("O arquivo nao contem dados suficientes", null);
+                        EOFException e = new EOFException();
+                        Log.Error("O arquivo nao contem dados suficientes", e);
                     }
                 } else {
-                    Log.Error("O arquivo nao esta acessivel. Tentativa " + attempt + "/" + maxAttempts, null);
+                    IOException e = new IOException ();
+                    Log.Error("O arquivo nao esta acessivel. Tentativa " + attempt + "/" + maxAttempts, e);
                 }
 
                 attempt++;
@@ -233,7 +236,8 @@ public class MainScreenController implements Initializable {
             }
         }
 
-        Log.Error("Nao foi possivel acessar o arquivo apos " + maxAttempts + " tentativas.", null);
+        EOFException e = new EOFException();
+        Log.Error("Nao foi possivel acessar o arquivo apos " + maxAttempts + " tentativas.", e);
     }
 
 
