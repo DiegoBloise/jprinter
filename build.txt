@@ -1,0 +1,4 @@
+mvn clean compile javafx:jlink
+
+
+jpackage --description "Serviço de monitoramento de arquivos para impressão." --icon "src\main\resources\icons\icon.ico" --name "JPrinter" --dest "target\dist" --vendor "com.dbl" --win-shortcut --win-menu --name "JPrinter" --runtime-image "target\jprinter" --module-path "target\classes" --module "jprinter/com.dbl.jprinter.Launcher" --app-version 1.0.5

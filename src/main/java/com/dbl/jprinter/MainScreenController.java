@@ -288,33 +288,41 @@ public class MainScreenController implements Initializable {
                     .setUnderline(Style.Underline.OneDotThick); */
 
             Style bold = new Style(escpos.getStyle())
+                    .setFontSize(Style.FontSize._1, Style.FontSize._1)
                     .setBold(true);
 
+
+            Style big_bold = new Style(escpos.getStyle())
+                    .setFontSize(Style.FontSize._2, Style.FontSize._2)
+                    .setBold(true);
+
+
             Style center = new Style()
+                    .setFontSize(Style.FontSize._1, Style.FontSize._1)
                     .setJustification(EscPosConst.Justification.Center);
 
 
             escpos
                     .writeLF(title,"Recibo de Vale")
 
-                    .feed(3)
+                    .feed(2)
 
                     .write(center, "Data: ")
-                    .write(bold, data)
-
-                    .feed(3)
-
-                    .write(normal, "Colaborador:" + " ".repeat(36 - nome.length()))
-                    .writeLF(bold, nome)
-                    .writeLF("-".repeat(48))
+                    .writeLF(bold, data)
 
                     .feed(2)
 
-                    .write( "Valor:" + " ".repeat(39 - valor.length()))
-                    .writeLF(bold, "R$ " + valor)
+                    .writeLF(normal, "Colaborador:") //.write(normal, "Colaborador:" + " ".repeat(36 - nome.length()))
+                    .writeLF(nome.length() > 24 ? bold:big_bold, nome)
                     .writeLF("-".repeat(48))
 
-                    .feed(2)
+                    .feed(1)
+
+                    .writeLF(normal, "Valor:") // .write( "Valor:" + " ".repeat(39 - valor.length()))
+                    .writeLF(big_bold, "R$ " + valor.replace(".", ","))
+                    .writeLF("-".repeat(48))
+
+                    .feed(1)
 
                     .writeLF(bold, "Assinatura:")
                     .writeLF("-".repeat(48))
